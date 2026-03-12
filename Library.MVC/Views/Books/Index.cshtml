@@ -1,59 +1,81 @@
-﻿@model IEnumerable<Library.Domain.Book>
+﻿@model Library.MVC.ViewModels.BookFilterViewModel
 
 @{
     ViewData["Title"] = "Index";
 }
 
-<h1>Books:</h1>
+<h1>Books</h1>
 
 <p>
     <a asp-action="Create">Create New</a>
 </p>
-<table class="table">
+
+<form method="get" class="d-flex gap-2 mb-3 align-items-start">
+
+    <input type="text"
+           name="search"
+           value="@Model.Search"
+           placeholder="Search title or author"
+           class="form-control"
+           style="max-width: 200px;" />
+
+    <select name="category" class="form-select" style="max-width: 180px;">
+        <option value="">All categories</option>
+        @foreach (var c in Model.Categories)
+        {
+            <option value="@c" selected="@(c == Model.Category)">
+                @c
+            </option>
+        }
+    </select>
+
+    <select name="availability" class="form-select" style="max-width: 150px;">
+        <option value="">All</option>
+        <option value="Available" selected="@(Model.Availability == "Available")">Available</option>
+        <option value="Inavailable" selected="@(Model.Availability == "Inavailable")">Inavailable</option>
+        <option value="OnLoan" selected="@(Model.Availability == "OnLoan")">On loan</option>
+    </select>
+
+    <select name="sortOrder" class="form-select" style="max-width: 150px;">
+        <option value="">Default</option>
+        <option value="title_asc" selected="@(Model.SortOrder == "title_asc")">Title A–Z</option>
+        <option value="title_desc" selected="@(Model.SortOrder == "title_desc")">Title Z–A</option>
+    </select>
+
+
+    <button type="submit" class="btn btn-primary">
+        Apply
+    </button>
+
+</form>
+
+
+<table class="table table-striped">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Title)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Author)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Isbn)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Category)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.IsAvailable)
-            </th>
+            <th>Title</th>
+            <th>Author</th>
+            <th>ISBN</th>
+            <th>Category</th>
+            <th>Available</th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Author)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Isbn)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Category)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.IsAvailable)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model.Books)
+        {
+            <tr>
+                <td>@item.Title</td>
+                <td>@item.Author</td>
+                <td>@item.Isbn</td>
+                <td>@item.Category</td>
+                <td>@(item.IsAvailable ? "Yes" : "No")</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
