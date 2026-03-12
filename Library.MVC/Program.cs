@@ -37,6 +37,14 @@ using (var scope = app.Services.CreateScope())
     await IdentitySeeder.SeedAdminAsync(scope.ServiceProvider);
 }
 
+// Seed Data
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await SeedData.InitializeAsync(context);
+}
+
+
 // Pipeline
 if (app.Environment.IsDevelopment())
 {
