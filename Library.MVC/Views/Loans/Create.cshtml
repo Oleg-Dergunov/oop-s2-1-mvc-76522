@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = "Create Loan";
+}
+
+<h1>Create</h1>
+
+<h4>Loan</h4>
+
+<form asp-action="Create" method="post">
+    <div class="mb-3">
+        <label>Member</label>
+        <select name="memberId" class="form-control" asp-items="ViewBag.Members"></select>
+    </div>
+
+    <div class="mb-3">
+        <label>Book</label>
+        <select name="bookId" class="form-control" asp-items="ViewBag.Books"></select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Create</button>
+</form>

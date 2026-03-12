@@ -1,0 +1,45 @@
+﻿@model IEnumerable<Library.Domain.Loan>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Loans</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Member</th>
+            <th>Book</th>
+            <th>Loan Date</th>
+            <th>Due Date</th>
+            <th>Returned</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var loan in Model)
+        {
+            <tr>
+                <td>@loan.Member?.FullName</td>
+                <td>@loan.Book?.Title</td>
+                <td>@loan.LoanDate</td>
+                <td>@loan.DueDate</td>
+                <td>@(loan.ReturnedDate?.ToString() ?? "Not returned")</td>
+                <td>
+                    @if (loan.ReturnedDate == null)
+                    {
+                        <form asp-action="Return" method="post">
+                            <input type="hidden" name="id" value="@loan.Id" />
+                            <button class="btn btn-success btn-sm">Return</button>
+                        </form>
+                    }
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
