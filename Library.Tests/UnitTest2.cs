@@ -6,10 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
-public class UnitTest1
+public class UnitTest2
 {
     [Fact]
-    public async Task CannotCreateLoan_WhenBookAlreadyOnActiveLoan()
+    public async Task ReturnedLoan_MakesBookAvailableForNewLoan()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
@@ -36,27 +36,33 @@ public class UnitTest1
         db.Books.Add(book);
         db.Members.Add(member);
 
-        db.Loans.Add(new Loan
+        var loan = new Loan
         {
             BookId = book.Id,
             MemberId = member.Id,
             LoanDate = DateOnly.FromDateTime(DateTime.Today),
             DueDate = DateOnly.FromDateTime(DateTime.Today.AddDays(14)),
             ReturnedDate = null
-        });
+        };
 
+        db.Loans.Add(loan);
         await db.SaveChangesAsync();
 
         var controller = new LoansController(db);
 
+        await controller.Return(loan.Id);
+
+        Assert.NotNull(db.Loans.First().ReturnedDate);
+
         var result = await controller.Create(member.Id, book.Id);
 
-        var view = Assert.IsType<ViewResult>(result);
+        var redirect = Assert.IsType<RedirectToActionResult>(result);
+        Assert.Equal("Index", redirect.ActionName);
 
-        Assert.False(controller.ModelState.IsValid);
-        Assert.True(controller.ModelState.ErrorCount > 0);
+        Assert.Equal(2, db.Loans.Count());
 
-        Assert.Equal(1, db.Loans.Count());
+        Assert.Null(db.Loans.OrderBy(l => l.Id).Last().ReturnedDate);
     }
 
+    
 }

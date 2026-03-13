@@ -15,10 +15,25 @@ public class LoansController : Controller
 
     public async Task<IActionResult> Index()
     {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+
         var loans = await _context.Loans
             .Include(l => l.Member)
             .Include(l => l.Book)
             .ToListAsync();
+
+        foreach (var loan in loans)
+        {
+            bool activeAndPastDue =
+                loan.ReturnedDate == null &&
+                loan.DueDate < today;
+
+            bool returnedLate =
+                loan.ReturnedDate != null &&
+                loan.ReturnedDate > loan.DueDate;
+
+            ViewData[$"Overdue_{loan.Id}"] = activeAndPastDue || returnedLate;
+        }
 
         return View(loans);
     }
@@ -47,7 +62,17 @@ public class LoansController : Controller
         if (isOnLoan)
         {
             ModelState.AddModelError("", "This book is already on loan.");
-            return await Create();
+
+            var members = await _context.Members.ToListAsync();
+            var availableBooks = await _context.Books
+                .Where(b => b.IsAvailable)
+                .Where(b => !_context.Loans.Any(l => l.BookId == b.Id && l.ReturnedDate == null))
+                .ToListAsync();
+
+            ViewBag.Members = new SelectList(members, "Id", "FullName");
+            ViewBag.Books = new SelectList(availableBooks, "Id", "Title");
+
+            return View();
         }
 
         var today = DateOnly.FromDateTime(DateTime.Now);

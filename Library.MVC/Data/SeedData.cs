@@ -53,24 +53,63 @@ namespace Library.MVC.Data
             await context.SaveChangesAsync();
 
             // Loans
+            var activeLoansByBook = new HashSet<int>();
+
             var loanFaker = new Faker<Loan>()
                 .RuleFor(l => l.MemberId, f => f.PickRandom(members).Id)
-                .RuleFor(l => l.BookId, f => f.PickRandom(books).Id)
+                .RuleFor(l => l.BookId, f =>
+                {
+                    // Pick a book that does NOT already have an active loan
+                    Book book;
+                    do
+                    {
+                        book = f.PickRandom(books);
+                    }
+                    while (activeLoansByBook.Contains(book.Id));
+
+                    return book.Id;
+                })
                 .RuleFor(l => l.LoanDate, f => DateOnly.FromDateTime(f.Date.Past(1)))
                 .RuleFor(l => l.DueDate, (f, l) => l.LoanDate.AddDays(14))
                 .RuleFor(l => l.ReturnedDate, (f, l) =>
                 {
-                    // 40% active, 40% returned, 20% overdue
+                    var book = books.First(b => b.Id == l.BookId);
                     var roll = f.Random.Int(1, 100);
 
+                    // 40% ACTIVE
                     if (roll <= 40)
-                        return null; 
+                    {
+                        if (book.IsAvailable)
+                        {
+                            activeLoansByBook.Add(book.Id);
+                            return null; // active loan
+                        }
+                        else
+                        {
+                            // book unavailable → force returned
+                            return l.LoanDate.AddDays(f.Random.Int(1, 20));
+                        }
+                    }
 
+                    // 40% RETURNED
                     if (roll <= 80)
+                    {
                         return l.LoanDate.AddDays(f.Random.Int(1, 20));
+                    }
 
-                    return null; 
+                    // 20% OVERDUE (active + past due)
+                    if (book.IsAvailable)
+                    {
+                        activeLoansByBook.Add(book.Id);
+                        return null; // overdue = active + past due
+                    }
+                    else
+                    {
+                        // cannot create another active loan → returned
+                        return l.LoanDate.AddDays(f.Random.Int(1, 20));
+                    }
                 });
+
 
             var loans = loanFaker.Generate(15);
             context.Loans.AddRange(loans);

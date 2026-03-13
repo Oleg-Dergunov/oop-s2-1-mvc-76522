@@ -24,12 +24,27 @@
     <tbody>
         @foreach (var loan in Model)
         {
+            var overdue = (bool?)ViewData[$"Overdue_{loan.Id}"] ?? false;
+
             <tr>
                 <td>@loan.Member?.FullName</td>
                 <td>@loan.Book?.Title</td>
                 <td>@loan.LoanDate</td>
                 <td>@loan.DueDate</td>
-                <td>@(loan.ReturnedDate?.ToString() ?? "Not returned")</td>
+
+                <td>
+                    @if (overdue)
+                    {
+                        <span style="color:red">
+                            @(loan.ReturnedDate?.ToString() ?? "Overdue")
+                        </span>
+                    }
+                    else
+                    {
+                        @(loan.ReturnedDate?.ToString() ?? "On loan")
+                    }
+                </td>
+
                 <td>
                     @if (loan.ReturnedDate == null)
                     {
